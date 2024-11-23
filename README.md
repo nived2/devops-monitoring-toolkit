@@ -102,13 +102,6 @@ go test ./...
 
 This project is open source and available under the [MIT License](LICENSE).
 
-## Acknowledgments
-
-- Prometheus team for metrics collection
-- Grafana Labs for visualization
-- Go team for the amazing language
-- Docker team for containerization
-
 ## Disclaimer
 
 This project is for educational purposes. It simulates various scenarios to help learn about monitoring and DevOps practices. It should not be used as-is in production environments.

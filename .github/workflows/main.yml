@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI
 
 on:
   push:
@@ -39,14 +39,10 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Build and push Docker image
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        docker build . -t ghcr.io/${{ github.repository }}:latest
-        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-        docker push ghcr.io/${{ github.repository }}:latest
+    - name: Docker Compose Build
+      run: docker-compose build
 
-  deploy-docs:
+  docs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
