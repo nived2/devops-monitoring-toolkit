@@ -1,0 +1,68 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.19'
+
+    - name: Test
+      run: go test -v ./... -cover
+
+    - name: Lint
+      run: |
+        go install golang.org/x/lint/golint@latest
+        golint -set_exit_status ./...
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.19'
+
+    - name: Build
+      run: go build -v ./...
+
+    - name: Build and push Docker image
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        docker build . -t ghcr.io/${{ github.repository }}:latest
+        echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+        docker push ghcr.io/${{ github.repository }}:latest
+
+  deploy-docs:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: './docs'
+
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v2
